@@ -10,6 +10,15 @@ script:
   - docker run -e CI=true sasquatch06/fib-client:dev npm run test -- --coverage
 
 after_success:
-  - docker build -t sasquatch06/fib-client:prod -f ./client/Dockerfile.dev ./client
-  - docker build -t sasquatch06/fib-server:prod -f ./server/Dockerfile.dev ./server
-  - docker build -t sasquatch06/fib-worker:prod -f ./worker/Dockerfile.dev ./worker
+  # Build all the production images
+  - docker build -t sasquatch06/fib-nginx:prod -f ./nginx/Dockerfile ./nginx
+  - docker build -t sasquatch06/fib-client:prod -f ./client/Dockerfile ./client
+  - docker build -t sasquatch06/fib-server:prod -f ./server/Dockerfile ./server
+  - docker build -t sasquatch06/fib-worker:prod -f ./worker/Dockerfile ./worker
+  # Login to docker CLI
+  - echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+  # Push all the prod images to Dockerhub
+  - docker push sasquatch06/fib-nginx:prod
+  - docker push sasquatch06/fib-client:prod
+  - docker push sasquatch06/fib-server:prod
+  - docker push sasquatch06/fib-worker:prod
