@@ -1,0 +1,39 @@
+name: Deploy MultiDocker
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_PASSWORD }}
+      - run: docker build -t sasquatch06/fib-client:dev -f ./client/Dockerfile.dev ./client
+      - run: docker run -e CI=true sasquatch06/fib-client:dev npm test
+  
+      - run: docker build -t sasquatch06/fib-client:prod ./client
+      - run: docker build -t sasquatch06/fib-nginx:prod ./nginx
+      - run: docker build -t sasquatch06/fib-server:prod ./server
+      - run: docker build -t sasquatch06/fib-worker:prod ./worker
+  
+      - run: docker push sasquatch06/fib-client:prod
+      - run: docker push sasquatch06/fib-nginx:prod
+      - run: docker push sasquatch06/fib-server:prod
+      - run: docker push sasquatch06/fib-worker:prod
+  
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
+  
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
+          application_name: multi-docker
+          environment_name: Multi-docker-env
+          existing_bucket_name: elasticbeanstalk-ap-south-1-559010633691
+          region: ap-south-1
+          version_label: ${{ github.sha }}
+          deployment_package: deploy.zip
