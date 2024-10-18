@@ -225,10 +225,13 @@
 
 ## Usage
 
-- Go to your AWS Elastic Beanstalk application.
+- Go to the AWS Elastic Beanstalk application.
 
 - It should say "Elastic Beanstalk is updating your environment"
 
 - It should eventually show `Health - OK`.
 
 - The application can now be accessed at the external URL provided under the environment name.
+
+![Web App](https://github.com/user-attachments/assets/0fce3aa2-596f-4073-94df-7736bf2e4d13)
+
