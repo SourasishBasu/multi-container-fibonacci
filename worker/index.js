@@ -1,11 +1,11 @@
-const keys = require("./keys");
-const redis = require("redis");
+const keys = require('./keys');
+const redis = require('redis');
 
 const redisClient = redis.createClient({
-  url: `redis://${keys.redisHost}:${keys.redisPort}`,
+  host: keys.redisHost,
+  port: keys.redisPort,
   retry_strategy: () => 1000,
 });
-
 const sub = redisClient.duplicate();
 
 function fib(index) {
@@ -13,11 +13,7 @@ function fib(index) {
   return fib(index - 1) + fib(index - 2);
 }
 
-(async () => {
-  await redisClient.connect();
-  await sub.connect();
-
-  sub.subscribe("insert", (message) => {
-    redisClient.hSet("values", message, fib(parseInt(message)));
-  });
-})();
+sub.on('message', (channel, message) => {
+  redisClient.hset('values', message, fib(parseInt(message)));
+});
+sub.subscribe('insert');
